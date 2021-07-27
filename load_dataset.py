@@ -9,8 +9,7 @@ def load_images():
     dataset = []
     i = 0
     j = 0
-    for img in glob.glob(r"C:\Users\avina\Documents\Deep Learning\Neural networks and deep learning"
-                         r"\Deep Neural network\datasets\cats_mini\*.JPG"):
+    for img in glob.glob("\datasets\cats\*.JPG"):
         i += 1
         img = Image.open(img)
         img_arr = np.array(img)
@@ -18,8 +17,7 @@ def load_images():
         if i%100 == 0:
             print(i, " cat images loaded successfully !!")
 
-    for img in glob.glob(r"C:\Users\avina\Documents\Deep Learning\Neural networks and deep learning"
-                         r"\Deep Neural network\datasets\dogs_mini\*.JPG"):
+    for img in glob.glob("\datasets\dogs\*.JPG"):
         j += 1
         img = Image.open(img)
         img_arr = np.array(img)
@@ -59,10 +57,7 @@ def load_train_test_sets():
     return X_train, Y_train, X_test, Y_test
 
 
-#np.save(r"C:\Users\avina\Documents\Deep Learning\Neural networks and deep learning\Deep Neural network\datasets\X_train_set_data", X_train)
-#np.save(r"C:\Users\avina\Documents\Deep Learning\Neural networks and deep learning\Deep Neural network\datasets\Y_train_set_data", Y_train)
-#np.save(r"C:\Users\avina\Documents\Deep Learning\Neural networks and deep learning\Deep Neural network\datasets\X_test_set_data", X_test)
-#np.save(r"C:\Users\avina\Documents\Deep Learning\Neural networks and deep learning\Deep Neural network\datasets\Y_test_set_data", Y_test)
+
 """
 data = load_images()
 for i in range(10):
