@@ -9,7 +9,7 @@ def load_images():
     dataset = []
     i = 0
     j = 0
-    for img in glob.glob("\datasets\cats\*.JPG"):
+    for img in glob.glob(r"C:\Users\avina\Documents\GitHub\Deep-Neural-networks\datasets\cats_mini\*.JPG"):
         i += 1
         img = Image.open(img)
         img_arr = np.array(img)
@@ -17,7 +17,7 @@ def load_images():
         if i%100 == 0:
             print(i, " cat images loaded successfully !!")
 
-    for img in glob.glob("\datasets\dogs\*.JPG"):
+    for img in glob.glob(r"C:\Users\avina\Documents\GitHub\Deep-Neural-networks\datasets\dogs_mini\*.JPG"):
         j += 1
         img = Image.open(img)
         img_arr = np.array(img)
@@ -33,6 +33,7 @@ def load_images():
 
 def load_train_test_sets():
     dataset = load_images()
+    print(len(dataset))
     X_train = []
     Y_train = []
     for i in range(1000):
