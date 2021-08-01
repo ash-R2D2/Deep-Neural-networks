@@ -12,7 +12,8 @@ def load_images():
     for img in glob.glob(r"C:\Users\avina\Documents\GitHub\Deep-Neural-networks\datasets\cats_mini\*.JPG"):
         i += 1
         img = Image.open(img)
-        img_arr = np.array(img)
+        img_cropped = img.resize((64, 64))
+        img_arr = np.array(img_cropped)
         dataset.append([img_arr, 1])
         if i%100 == 0:
             print(i, " cat images loaded successfully !!")
@@ -20,7 +21,8 @@ def load_images():
     for img in glob.glob(r"C:\Users\avina\Documents\GitHub\Deep-Neural-networks\datasets\dogs_mini\*.JPG"):
         j += 1
         img = Image.open(img)
-        img_arr = np.array(img)
+        img_cropped = img.resize((64, 64))
+        img_arr = np.array(img_cropped)
         dataset.append([img_arr, 0])
         if j%100 == 0:
             print(j, " dog images loaded successfully !!")

@@ -41,7 +41,8 @@ def gradient_check(parameters, gradients, X, Y,layer_dims, epsilon=1e-7):
             print(" J+- for parameter number ", i, " Calculated.......")
 
     print("Final gradapprox calculated...... !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!.......")
-
+    print("Grad approx is =        ", gradapprox)
+    print("backward prop grad is = ", grad)
     # Compare gradapprox to backward propagation gradients by computing difference.
     numerator = np.linalg.norm(grad - gradapprox)
     denominator = np.linalg.norm(grad) + np.linalg.norm(gradapprox)
@@ -49,11 +50,11 @@ def gradient_check(parameters, gradients, X, Y,layer_dims, epsilon=1e-7):
 
     return difference
 
-n_x = int(64 * 64 * 3)
+n_x = int(24 * 24 * 3)
 layer_dims = [n_x, 200, 70, 40, 1]
 
 img = Image.open(r"C:\Users\avina\Documents\GitHub\Deep-Neural-networks\datasets\single_cat_image\cat_00012.JPG")
-img_cropped = img.resize((64,64))
+img_cropped = img.resize((24,24))
 img_cropped.show()
 img_arr = np.array(img_cropped)
 

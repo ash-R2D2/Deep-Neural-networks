@@ -1,9 +1,11 @@
 import numpy as np
 from dnn_utils import sigmoid, relu, sigmoid_backward, relu_backward
+import matplotlib.pyplot as plt
 from numba import jit, cuda
 
 
 def initialize_parameters(layer_dimensions):
+    np.random.seed(3)
     parameters = {}
 
     # layer_dimensions[0] is the number of input features in a training example or --
@@ -13,44 +15,47 @@ def initialize_parameters(layer_dimensions):
     L = len(layer_dimensions)
 
     for l in range(1, L):
-        parameters["W" + str(l)] = np.random.rand(layer_dimensions[l], layer_dimensions[l - 1]) * 0.01
+        parameters["W" + str(l)] = np.random.randn(layer_dimensions[l], layer_dimensions[l - 1]) * 0.01
         parameters["B" + str(l)] = np.zeros((layer_dimensions[l], 1))
 
-        #assert (parameters['W' + str(l)].shape == (layer_dimensions[l], layer_dimensions[l - 1]))
-        #assert (parameters['B' + str(l)].shape == (layer_dimensions[l], 1))
-
+        # assert (parameters['W' + str(l)].shape == (layer_dimensions[l], layer_dimensions[l - 1]))
+        # assert (parameters['B' + str(l)].shape == (layer_dimensions[l], 1))
 
     return parameters
 
-# 
+#
 def linear_hypothesis(A, W, B):
     # Here A is the activation of the previous layer and is acting as the
     # input for the current layer. W and B are the parameters of the current layer.
     Z = np.dot(W, A) + B
+    assert (Z.shape == (W.shape[0], A.shape[1]))
     cache = (A, W, B)
     return Z, cache
 
-# 
+#
 def hypothesis_activation(A_prev, W, B, activation_fn):
-    Z, linear_cache = linear_hypothesis(A_prev, W, B)
+
     # The linear_cache contains the A (A_prev), W , B used to calculate the Z.
     # Here the A_prev is the activation of previous layer which is acting as the input for the current layer
     # and is being used with the W and B of current layers to calculate the Z of the current layer.
 
     if activation_fn == "sigmoid":
+        Z, linear_cache = linear_hypothesis(A_prev, W, B)
         A, activation_cache = sigmoid(Z)
 
     elif activation_fn == "relu":
+        Z, linear_cache = linear_hypothesis(A_prev, W, B)
         A, activation_cache = relu(Z)
 
     # The activation_cache contains the value of the Z which is used to calculate the activation A
     # using the given function.
 
+    assert (A.shape == (W.shape[0], A_prev.shape[1]))
     cache = (linear_cache, activation_cache)
 
     return A, cache
 
-# 
+
 def forward_propagation(X, parameters):
     forward_cache = []
     A = X
@@ -58,25 +63,28 @@ def forward_propagation(X, parameters):
 
     for l in range(1, L):
         A_prev = A
-        A, cache = hypothesis_activation(A_prev, parameters["W" + str(l)], parameters["B" + str(l)], "relu")
+        A, cache = hypothesis_activation(A_prev, parameters["W" + str(l)], parameters["B" + str(l)], activation_fn="relu")
         forward_cache.append(cache)
 
-    AL, cache = hypothesis_activation(A, parameters["W" + str(L)], parameters["B" + str(L)], "sigmoid")
+    AL, cache = hypothesis_activation(A, parameters["W" + str(L)], parameters["B" + str(L)], activation_fn="sigmoid")
     forward_cache.append(cache)
 
+    assert (AL.shape == (1, X.shape[1]))
     return AL, forward_cache
 
-# 
+
 def compute_cost(AL, Y):
     m = Y.shape[1]
 
     # Computing the cross entropy loss
-    cost = (-1 / m) * (np.dot(Y, np.log(AL).T) + np.dot((1 - Y), np.log(1 - AL).T))
+    # cost = (-1 / m) * (np.dot(Y, np.log(AL).T) + np.dot((1 - Y), np.log(1 - AL).T))
+    logprods = np.dot(Y, np.log(AL).T) + np.dot((1 - Y), np.log(1 - AL).T)
+    cost = -1 / m * np.sum(logprods)
     cost = np.squeeze(cost)
-
+    assert (cost.shape == ())
     return cost
 
-# 
+#
 def linear_backward(dZ, cache):
     A_prev, W, B = cache
     m = A_prev.shape[1]
@@ -86,13 +94,18 @@ def linear_backward(dZ, cache):
 
     # Here dA_prev => d/(dA[l-1]) (Loss function)
 
+    assert (dA_prev.shape == A_prev.shape)
+    assert (dW.shape == W.shape)
+    assert (db.shape == B.shape)
+
     return dA_prev, dW, db
 
-# 
+#
 def linear_activation_backward(dA, cache, activation_fn):
 
-    linear_cache = cache[0]
-    activation_cache = cache[1]
+    #linear_cache = cache[0]
+    #activation_cache = cache[1]
+    linear_cache, activation_cache = cache
 
     if activation_fn == "relu":
         dZ = relu_backward(dA, activation_cache)
@@ -102,18 +115,19 @@ def linear_activation_backward(dA, cache, activation_fn):
         dZ = sigmoid_backward(dA, activation_cache)
         dA_prev, dW, db = linear_backward(dZ, linear_cache)
 
+
     # Here dZ is derivative of activation function wrt Z, i.e given A=g(Z),
     # dZ => d/dZ(Activation function)== d/dZ(g(Z))
     # dZ == dA[l] * g[l]'(Z[l])
 
     return dA_prev, dW, db
 
-# 
+#
 def backward_propagation(AL, Y, caches):
     gradients = {}
 
-    print("Shape of AL is ==", AL.shape)
-    print("Shape of Y is ==", Y.shape)
+    # print("Shape of AL is ==", AL.shape)
+    # print("Shape of Y is ==", Y.shape)
     # the number of layers
     L = len(caches)
     m = AL.shape[1]
@@ -121,13 +135,12 @@ def backward_propagation(AL, Y, caches):
 
     # Derivative of of cross entropy loss function wrt A i.e dAL => d/dA(Loss function)== d/dA (L(A,Y))
     # => dAL = (-Y/A) + (1-Y)/(1-A)
-    dAL = -(np.divide(Y, AL)) + np.divide((1 - Y), (1 - AL))
+    # dAL = -(np.divide(Y, AL)) + np.divide((1 - Y), (1 - AL))
+    dAL = - (np.divide(Y, AL) - np.divide(1 - Y, 1 - AL))
 
     current_cache = caches[L - 1]  # cache from the last most layer.
-    dA_prev, dW_temp, db_temp = linear_activation_backward(dAL, current_cache, "sigmoid")
-    gradients["dA" + str(L - 1)] = dA_prev
-    gradients["dW" + str(L)] = dW_temp
-    gradients["db" + str(L)] = db_temp
+    gradients["dA" + str(L-1)], gradients["dW" + str(L)], gradients["db" + str(L)] = \
+        linear_activation_backward(dAL, current_cache, activation_fn="sigmoid")
 
     # for the next last layers, the activation function is relu.
     for l in reversed(range(L - 1)):
@@ -139,9 +152,9 @@ def backward_propagation(AL, Y, caches):
 
     return gradients
 
-# 
-def update_parameters(params, gradients, learning_rate):
-    parameters = params.copy()
+#
+def update_parameters(parameters, gradients, learning_rate):
+    #parameters = params.copy()
     L = len(parameters) // 2  # number of layers in the neural network
 
     for l in range(L):
@@ -151,7 +164,8 @@ def update_parameters(params, gradients, learning_rate):
     return parameters
 
 
-def run_model(X, Y, layers_dimensions, learning_rate=0.75, num_iterations=300, print_cost=True):
+def run_model(X, Y, layers_dimensions, learning_rate=0.05, num_iterations=10000, print_cost=True):
+    np.random.seed(1)
     costs = []
     parameters = initialize_parameters(layers_dimensions)
 
@@ -171,10 +185,16 @@ def run_model(X, Y, layers_dimensions, learning_rate=0.75, num_iterations=300, p
         parameters = update_parameters(parameters, gradients, learning_rate)
 
         # Print the cost every 100 iterations
-        #if print_cost and i % 10 == 0 or i == num_iterations - 1:
-        print("Cost after iteration {}: {}".format(i, np.squeeze(cost)))
+        if print_cost and i % 100 == 0 or i == num_iterations - 1:
+            print("Cost after iteration {}: {}".format(i, np.squeeze(cost)))
         if i % 100 == 0 or i == num_iterations:
             costs.append(cost)
+
+    plt.plot(np.squeeze(costs))
+    plt.ylabel('cost')
+    plt.xlabel('iterations (per hundreds)')
+    plt.title("Learning rate =" + str(learning_rate))
+    plt.show()
 
     return parameters, costs
 
