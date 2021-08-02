@@ -1,7 +1,6 @@
 import numpy as np
 from dnn_utils import sigmoid, relu, sigmoid_backward, relu_backward
 import matplotlib.pyplot as plt
-from numba import jit, cuda
 
 
 def initialize_parameters(layer_dimensions):
@@ -23,6 +22,7 @@ def initialize_parameters(layer_dimensions):
 
     return parameters
 
+
 #
 def linear_hypothesis(A, W, B):
     # Here A is the activation of the previous layer and is acting as the
@@ -32,9 +32,9 @@ def linear_hypothesis(A, W, B):
     cache = (A, W, B)
     return Z, cache
 
+
 #
 def hypothesis_activation(A_prev, W, B, activation_fn):
-
     # The linear_cache contains the A (A_prev), W , B used to calculate the Z.
     # Here the A_prev is the activation of previous layer which is acting as the input for the current layer
     # and is being used with the W and B of current layers to calculate the Z of the current layer.
@@ -63,7 +63,8 @@ def forward_propagation(X, parameters):
 
     for l in range(1, L):
         A_prev = A
-        A, cache = hypothesis_activation(A_prev, parameters["W" + str(l)], parameters["B" + str(l)], activation_fn="relu")
+        A, cache = hypothesis_activation(A_prev, parameters["W" + str(l)], parameters["B" + str(l)],
+                                         activation_fn="relu")
         forward_cache.append(cache)
 
     AL, cache = hypothesis_activation(A, parameters["W" + str(L)], parameters["B" + str(L)], activation_fn="sigmoid")
@@ -102,9 +103,8 @@ def linear_backward(dZ, cache):
 
 #
 def linear_activation_backward(dA, cache, activation_fn):
-
-    #linear_cache = cache[0]
-    #activation_cache = cache[1]
+    # linear_cache = cache[0]
+    # activation_cache = cache[1]
     linear_cache, activation_cache = cache
 
     if activation_fn == "relu":
@@ -114,7 +114,6 @@ def linear_activation_backward(dA, cache, activation_fn):
     elif activation_fn == "sigmoid":
         dZ = sigmoid_backward(dA, activation_cache)
         dA_prev, dW, db = linear_backward(dZ, linear_cache)
-
 
     # Here dZ is derivative of activation function wrt Z, i.e given A=g(Z),
     # dZ => d/dZ(Activation function)== d/dZ(g(Z))
@@ -139,7 +138,7 @@ def backward_propagation(AL, Y, caches):
     dAL = - (np.divide(Y, AL) - np.divide(1 - Y, 1 - AL))
 
     current_cache = caches[L - 1]  # cache from the last most layer.
-    gradients["dA" + str(L-1)], gradients["dW" + str(L)], gradients["db" + str(L)] = \
+    gradients["dA" + str(L - 1)], gradients["dW" + str(L)], gradients["db" + str(L)] = \
         linear_activation_backward(dAL, current_cache, activation_fn="sigmoid")
 
     # for the next last layers, the activation function is relu.
@@ -152,9 +151,10 @@ def backward_propagation(AL, Y, caches):
 
     return gradients
 
+
 #
 def update_parameters(parameters, gradients, learning_rate):
-    #parameters = params.copy()
+    # parameters = params.copy()
     L = len(parameters) // 2  # number of layers in the neural network
 
     for l in range(L):
@@ -209,7 +209,7 @@ def predict(X, parameters):
         A, cache = hypothesis_activation(A_prev, parameters["W" + str(l)], parameters["B" + str(l)], "relu")
 
     # Calculate final prediction from the output layer.
-    predictions, cache = linear_hypothesis(A, parameters["W" + str(L)], parameters["B" + str(L)], "sigmoid")
+    predictions, cache = hypothesis_activation(A, parameters["W" + str(L)], parameters["B" + str(L)], "sigmoid")
     predictions = np.round(predictions)
 
     return predictions
