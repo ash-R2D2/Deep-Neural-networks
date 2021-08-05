@@ -27,7 +27,7 @@ def random_mini_batches(X, Y, mini_batch_size=64, seed=0):
 
     # Step 2 - Partition (shuffled_X, shuffled_Y).
     # Cases with a complete mini batch size only i.e each of 64 examples.
-    num_complete_minibatches = np.floor(m / mini_batch_size)
+    num_complete_minibatches = int(np.floor(m / mini_batch_size))
     # number of mini batches of size mini_batch_size in your partitioning
 
     for k in range(0, num_complete_minibatches):
@@ -43,6 +43,9 @@ def random_mini_batches(X, Y, mini_batch_size=64, seed=0):
 
         mini_batch_X = shuffled_X[:, num_complete_minibatches * inc:]
         mini_batch_Y = shuffled_Y[:, num_complete_minibatches * inc:]
+
+        #print(" Shape of minibatch_X = ", mini_batch_X.shape)
+        #print(" Shape of minibatch_Y = ", mini_batch_Y.shape)
 
         mini_batch = (mini_batch_X, mini_batch_Y)
         mini_batches.append(mini_batch)

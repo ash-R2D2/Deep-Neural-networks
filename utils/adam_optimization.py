@@ -3,7 +3,7 @@ import numpy as np
 def initialize_adam(parameters):
     """
     Initializes v and s as two python dictionaries with:
-                - keys: "dW1", "db1", ..., "dWL", "dbL"
+                - keys: "dW1", "dB1", ..., "dWL", "dBL"
                 - values: numpy arrays of zeros of the same shape as the corresponding gradients/parameters.
 
     Arguments:
@@ -23,10 +23,10 @@ def initialize_adam(parameters):
     for l in range(1, L + 1):
 
         v["dW" + str(l)] = np.zeros(parameters['W' + str(l)].shape)
-        v["db" + str(l)] = np.zeros(parameters['b' + str(l)].shape)
+        v["db" + str(l)] = np.zeros(parameters['B' + str(l)].shape)
 
         s["dW" + str(l)] = np.zeros(parameters['W' + str(l)].shape)
-        s["db" + str(l)] = np.zeros(parameters['b' + str(l)].shape)
+        s["db" + str(l)] = np.zeros(parameters['B' + str(l)].shape)
 
     return v, s
 
@@ -42,7 +42,7 @@ def update_parameters_with_adam(parameters, grads, v, s, t, learning_rate=0.01,
                     parameters['b' + str(l)] = bl
     grads -- python dictionary containing your gradients for each parameters:
                     grads['dW' + str(l)] = dWl
-                    grads['db' + str(l)] = dbl
+                    grads['dB' + str(l)] = dBl
     v -- Adam variable, moving average of the first gradient, python dictionary
     s -- Adam variable, moving average of the squared gradient, python dictionary
     t -- Adam variable, counts the number of taken steps
@@ -60,6 +60,7 @@ def update_parameters_with_adam(parameters, grads, v, s, t, learning_rate=0.01,
     L = len(parameters) // 2  # number of layers in the neural networks
     v_corrected = {}  # Initializing first moment estimate, python dictionary
     s_corrected = {}  # Initializing second moment estimate, python dictionary
+
 
     # Perform Adam update on all parameters
     for l in range(1, L + 1):
@@ -82,7 +83,7 @@ def update_parameters_with_adam(parameters, grads, v, s, t, learning_rate=0.01,
         # Update parameters. Inputs: "parameters, learning_rate, v_corrected, s_corrected, epsilon".
         parameters["W" + str(l)] = parameters["W" + str(l)] - learning_rate * v_corrected["dW" + str(l)] / (
                     np.sqrt(s_corrected["dW" + str(l)]) + epsilon)
-        parameters["b" + str(l)] = parameters["b" + str(l)] - learning_rate * v_corrected["db" + str(l)] / (
+        parameters["B" + str(l)] = parameters["B" + str(l)] - learning_rate * v_corrected["db" + str(l)] / (
                     np.sqrt(s_corrected["db" + str(l)]) + epsilon)
 
     return parameters, v, s, v_corrected, s_corrected

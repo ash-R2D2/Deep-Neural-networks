@@ -82,11 +82,14 @@ def compute_cost(AL, Y):
 
     # Computing the cross entropy loss
     # cost = (-1 / m) * (np.dot(Y, np.log(AL).T) + np.dot((1 - Y), np.log(1 - AL).T))
-    logprods = np.dot(Y, np.log(AL).T) + np.dot((1 - Y), np.log(1 - AL).T)
-    cost = -1 / m * np.sum(logprods)
-    cost = np.squeeze(cost)
-    assert (cost.shape == ())
-    return cost
+    #logprods = np.dot(Y, np.log(AL).T) + np.dot((1 - Y), np.log(1 - AL).T)
+    #cost = -1 / m * np.sum(logprods)
+
+    logprobs = np.multiply(-np.log(AL), Y) + np.multiply(-np.log(1 - AL), 1 - Y)
+    cost_total = np.sum(logprobs)
+    #cost = np.squeeze(cost)
+    #assert (cost.shape == ())
+    return cost_total
 
 
 #
@@ -241,7 +244,7 @@ def model_v2(X, Y, layers_dims, learning_rate=0.0007, mini_batch_size=64, beta=0
         Returns:
         parameters -- python dictionary containing your updated parameters
         """
-
+    seed = 1
     L = len(layers_dims)     # number of layers in the neural networks
     costs = []               # to keep track of the cost
     t = 0                    # initializing the counter required for Adam update
@@ -272,20 +275,28 @@ def model_v2(X, Y, layers_dims, learning_rate=0.0007, mini_batch_size=64, beta=0
             cost_total += compute_cost(AL, minibatch_Y)
 
             # Backward propagation
-            gradients = backward_propagation(minibatch_X, minibatch_Y, caches)
+            gradients = backward_propagation(AL, minibatch_Y, caches)
 
             # Update parameters
             t = t + 1                # Adam counter
             parameters, v, s, _, _ = update_parameters_with_adam(parameters, gradients, v, s,
                                                                  t, learning_rate, beta1, beta2, epsilon)
 
-
         cost_avg = cost_total / m
 
         # Print the cost every 1000 epoch
-        if print_cost and i % 1000 == 0:
+        if print_cost and i % 10 == 0:
             print("Cost after epoch %i: %f" % (i, cost_avg))
-        if print_cost and i % 100 == 0:
+        if print_cost and i % 10 == 0:
             costs.append(cost_avg)
+
+    # plot the cost
+    plt.plot(costs)
+    plt.ylabel('cost')
+    plt.xlabel('epochs (per 100)')
+    plt.title("Learning rate = " + str(learning_rate))
+    plt.show()
+
+    return parameters
 
 
