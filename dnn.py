@@ -1,5 +1,7 @@
 import numpy as np
 from utils.dnn_utils import sigmoid, relu, sigmoid_backward, relu_backward
+from utils.adam_optimization import *
+from utils.mini_batches import *
 import matplotlib.pyplot as plt
 
 
@@ -24,7 +26,7 @@ def initialize_parameters(layer_dimensions):
 
 
 #
-def linear_hypothesis(A, W, B):
+def linear_forward(A, W, B):
     # Here A is the activation of the previous layer and is acting as the
     # input for the current layer. W and B are the parameters of the current layer.
     Z = np.dot(W, A) + B
@@ -34,17 +36,17 @@ def linear_hypothesis(A, W, B):
 
 
 #
-def hypothesis_activation(A_prev, W, B, activation_fn):
+def linear_forward_activation(A_prev, W, B, activation_fn):
     # The linear_cache contains the A (A_prev), W , B used to calculate the Z.
     # Here the A_prev is the activation of previous layer which is acting as the input for the current layer
     # and is being used with the W and B of current layers to calculate the Z of the current layer.
 
     if activation_fn == "sigmoid":
-        Z, linear_cache = linear_hypothesis(A_prev, W, B)
+        Z, linear_cache = linear_forward(A_prev, W, B)
         A, activation_cache = sigmoid(Z)
 
     elif activation_fn == "relu":
-        Z, linear_cache = linear_hypothesis(A_prev, W, B)
+        Z, linear_cache = linear_forward(A_prev, W, B)
         A, activation_cache = relu(Z)
 
     # The activation_cache contains the value of the Z which is used to calculate the activation A
@@ -63,11 +65,12 @@ def forward_propagation(X, parameters):
 
     for l in range(1, L):
         A_prev = A
-        A, cache = hypothesis_activation(A_prev, parameters["W" + str(l)], parameters["B" + str(l)],
-                                         activation_fn="relu")
+        A, cache = linear_forward_activation(A_prev, parameters["W" + str(l)], parameters["B" + str(l)],
+                                             activation_fn="relu")
         forward_cache.append(cache)
 
-    AL, cache = hypothesis_activation(A, parameters["W" + str(L)], parameters["B" + str(L)], activation_fn="sigmoid")
+    AL, cache = linear_forward_activation(A, parameters["W" + str(L)], parameters["B" + str(L)],
+                                          activation_fn="sigmoid")
     forward_cache.append(cache)
 
     assert (AL.shape == (1, X.shape[1]))
@@ -85,6 +88,7 @@ def compute_cost(AL, Y):
     assert (cost.shape == ())
     return cost
 
+
 #
 def linear_backward(dZ, cache):
     A_prev, W, B = cache
@@ -100,6 +104,7 @@ def linear_backward(dZ, cache):
     assert (db.shape == B.shape)
 
     return dA_prev, dW, db
+
 
 #
 def linear_activation_backward(dA, cache, activation_fn):
@@ -206,10 +211,81 @@ def predict(X, parameters):
     # loop through the hidden layers.
     for l in range(1, L):
         A_prev = A
-        A, cache = hypothesis_activation(A_prev, parameters["W" + str(l)], parameters["B" + str(l)], "relu")
+        A, cache = linear_forward_activation(A_prev, parameters["W" + str(l)], parameters["B" + str(l)], "relu")
 
     # Calculate final prediction from the output layer.
-    predictions, cache = hypothesis_activation(A, parameters["W" + str(L)], parameters["B" + str(L)], "sigmoid")
+    predictions, cache = linear_forward_activation(A, parameters["W" + str(L)], parameters["B" + str(L)], "sigmoid")
     predictions = np.round(predictions)
 
     return predictions
+
+
+def model_v2(X, Y, layers_dims, learning_rate=0.0007, mini_batch_size=64, beta=0.9,
+             beta1=0.9, beta2=0.999, epsilon=1e-8, num_epochs=500, print_cost=True):
+    """
+        n-layer neural network model using gradient descent with Adam optimisation.
+
+        Arguments:
+        X -- input data, of shape (number of features per training example, number of examples)
+        Y -- true "label" vector , of shape (1, number of examples)
+        layers_dims -- python list, containing the size of each layer
+        learning_rate -- the learning rate, scalar.
+        mini_batch_size -- the size of a mini batch
+        beta -- Momentum hyperparameter
+        beta1 -- Exponential decay hyperparameter for the past gradients estimates
+        beta2 -- Exponential decay hyperparameter for the past squared gradients estimates
+        epsilon -- hyperparameter preventing division by zero in Adam updates
+        num_epochs -- number of epochs
+        print_cost -- True to print the cost every 1000 epochs
+
+        Returns:
+        parameters -- python dictionary containing your updated parameters
+        """
+
+    L = len(layers_dims)     # number of layers in the neural networks
+    costs = []               # to keep track of the cost
+    t = 0                    # initializing the counter required for Adam update
+    m = X.shape[1]           # number of training examples
+
+    # Initialize parameters
+    parameters = initialize_parameters(layers_dims)
+
+    # Initialize the optimizer
+    v, s = initialize_adam(parameters)
+
+    # Optimization loop
+    for i in range(num_epochs):
+
+        # Define the random minibatches. We increment the seed to reshuffle differently the dataset after each epoch
+        seed = seed + 1
+        minibatches = random_mini_batches(X, Y, mini_batch_size, seed)
+        cost_total = 0
+
+        for minibatch in minibatches:
+            # Select a minibatch
+            (minibatch_X, minibatch_Y) = minibatch
+
+            # Forward propagation
+            AL, caches = forward_propagation(minibatch_X, parameters)
+
+            # Compute cost and add to the cost total
+            cost_total += compute_cost(AL, minibatch_Y)
+
+            # Backward propagation
+            gradients = backward_propagation(minibatch_X, minibatch_Y, caches)
+
+            # Update parameters
+            t = t + 1                # Adam counter
+            parameters, v, s, _, _ = update_parameters_with_adam(parameters, gradients, v, s,
+                                                                 t, learning_rate, beta1, beta2, epsilon)
+
+
+        cost_avg = cost_total / m
+
+        # Print the cost every 1000 epoch
+        if print_cost and i % 1000 == 0:
+            print("Cost after epoch %i: %f" % (i, cost_avg))
+        if print_cost and i % 100 == 0:
+            costs.append(cost_avg)
+
+
