@@ -1,5 +1,5 @@
 import numpy as np
-from dnn_utils import sigmoid, relu, sigmoid_backward, relu_backward
+from utils.dnn_utils import sigmoid, relu, sigmoid_backward, relu_backward
 import matplotlib.pyplot as plt
 
 
@@ -121,7 +121,7 @@ def linear_activation_backward(dA, cache, activation_fn):
 
     return dA_prev, dW, db
 
-#
+
 def backward_propagation(AL, Y, caches):
     gradients = {}
 
